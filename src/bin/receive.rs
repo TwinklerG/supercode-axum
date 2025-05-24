@@ -11,7 +11,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let stream = "Runner2Server";
     let create_response = environment
         .stream_creator()
-        .max_length(ByteCapacity::GB(5))
+        .max_length(ByteCapacity::GB(1))
         .create(stream)
         .await;
 

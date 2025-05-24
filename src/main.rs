@@ -17,7 +17,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let receive_stream = "Server2Runner";
     let create_response = environment
         .stream_creator()
-        .max_length(ByteCapacity::GB(5))
+        .max_length(ByteCapacity::GB(1))
         .create(receive_stream)
         .await;
     if let Err(e) = create_response {
@@ -40,7 +40,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let send_stream = "Runner2Server";
     let create_response = environment
         .stream_creator()
-        .max_length(ByteCapacity::GB(5))
+        .max_length(ByteCapacity::GB(1))
         .create(send_stream)
         .await;
     if let Err(e) = create_response {
@@ -108,7 +108,7 @@ mod main_test {
         let stream = "Server2Runner";
         let create_response = environment
             .stream_creator()
-            .max_length(ByteCapacity::GB(5))
+            .max_length(ByteCapacity::GB(1))
             .create(stream)
             .await;
 
@@ -164,7 +164,7 @@ mod main_test {
         let stream = "Server2Runner";
         let create_response = environment
             .stream_creator()
-            .max_length(ByteCapacity::GB(5))
+            .max_length(ByteCapacity::GB(1))
             .create(stream)
             .await;
 
