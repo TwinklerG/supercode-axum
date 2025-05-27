@@ -159,6 +159,103 @@ mod main_test {
     }
 
     #[tokio::test]
+    async fn c_a_add_b() -> Result<(), Box<dyn std::error::Error>> {
+        let environment = Environment::builder().build().await?;
+        let stream = "Server2Runner";
+        let create_response = environment
+            .stream_creator()
+            .max_length(ByteCapacity::GB(1))
+            .create(stream)
+            .await;
+
+        if let Err(e) = create_response {
+            if let StreamCreateError::Create { stream, status } = e {
+                match status {
+                    // we can ignore this error because the stream already exists
+                    ResponseCode::StreamAlreadyExists => {}
+                    err => {
+                        println!("Error creating stream: {:?} {:?}", stream, err);
+                    }
+                }
+            }
+        }
+
+        let producer = environment.producer().build(stream).await?;
+
+        let commands = vec![
+            CMD {
+                command: "bash".to_string(),
+                args: vec![
+                    "-c".to_string(),
+                    r#"echo '#include <stdio.h>
+int main() {
+    int a, b;
+    scanf("%d %d", &a, &b);
+    printf("%d + %d = %d\n", a, b, a + b);
+}' > main.c"#
+                        .to_string(),
+                ],
+                input: "".to_string(),
+                config: Config {
+                    time_limit: 1,
+                    time_reserved: 1,
+                    memory_limit: 256000,
+                    memory_reserved: 4096000,
+                    large_stack: false,
+                    output_limit: 0,
+                    process_limit: 0,
+                },
+            },
+            CMD {
+                command: "gcc".to_string(),
+                args: vec!["main.c".to_string(), "-o".to_string(), "main".to_string()],
+                input: "".to_string(),
+                config: Config {
+                    time_limit: 1,
+                    time_reserved: 1,
+                    memory_limit: 256000,
+                    memory_reserved: 4096000,
+                    large_stack: false,
+                    output_limit: 0,
+                    process_limit: 0,
+                },
+            },
+            CMD {
+                command: "./main".to_string(),
+                args: vec![],
+                input: "1 2".to_string(),
+                config: Config {
+                    time_limit: 1,
+                    time_reserved: 1,
+                    memory_limit: 256000,
+                    memory_reserved: 4096000,
+                    large_stack: false,
+                    output_limit: 0,
+                    process_limit: 0,
+                },
+            },
+        ];
+        let form_data = FormData {
+            commands,
+            image: "gcc:14.2",
+            submit_id: "......".to_string(),
+        };
+
+        print!("{}", serde_yaml::to_string(&form_data).unwrap());
+
+        producer
+            .send_with_confirm(
+                Message::builder()
+                    .body(serde_yaml::to_string(&form_data).unwrap())
+                    .build(),
+            )
+            .await?;
+        println!("Sent message to stream: {}", stream);
+        producer.close().await?;
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn cpp_a_add_b() -> Result<(), Box<dyn std::error::Error>> {
         let environment = Environment::builder().build().await?;
         let stream = "Server2Runner";
@@ -184,7 +281,7 @@ mod main_test {
 
         let commands = vec![
             CMD {
-                command: "sh".to_string(),
+                command: "bash".to_string(),
                 args: vec![
                     "-c".to_string(),
                     r#"echo '#include <iostream>

@@ -108,7 +108,7 @@ pub fn sandbox_service(
     command.arg(image).arg("./sandbox");
     let _ = command.output();
     let results = fs::read_to_string(format!("{}/results.yaml", tmp_folder)).unwrap();
-    let _ = fs::remove_dir_all(tmp_folder);
+    // let _ = fs::remove_dir_all(tmp_folder);
     Ok(serde_yaml::from_str(&results).unwrap())
 }
 
@@ -142,10 +142,70 @@ mod service_test {
     }
 
     #[test]
+    fn c_a_add_b() {
+        let commands = vec![
+            CMD {
+                command: "bash".to_string(),
+                args: vec![
+                    "-c".to_string(),
+                    r#"echo '#include <stdio.h>
+int main() {
+    int a, b;
+    scanf("%d %d", &a, &b);
+    printf("%d + %d = %d\n", a, b, a + b);
+}' > main.c"#
+                        .to_string(),
+                ],
+                input: "".to_string(),
+                config: Config {
+                    time_limit: 1,
+                    time_reserved: 1,
+                    memory_limit: 256000,
+                    memory_reserved: 4096000,
+                    large_stack: false,
+                    output_limit: 0,
+                    process_limit: 0,
+                },
+            },
+            CMD {
+                command: "gcc".to_string(),
+                args: vec!["main.c".to_string(), "-o".to_string(), "main".to_string()],
+                input: "".to_string(),
+                config: Config {
+                    time_limit: 1,
+                    time_reserved: 1,
+                    memory_limit: 256000,
+                    memory_reserved: 4096000,
+                    large_stack: false,
+                    output_limit: 0,
+                    process_limit: 0,
+                },
+            },
+            CMD {
+                command: "./main".to_string(),
+                args: vec![],
+                input: "1 2".to_string(),
+                config: Config {
+                    time_limit: 1,
+                    time_reserved: 1,
+                    memory_limit: 256000,
+                    memory_reserved: 4096000,
+                    large_stack: false,
+                    output_limit: 0,
+                    process_limit: 0,
+                },
+            },
+        ];
+        let results = sandbox_service(commands, "gcc:14.2");
+        assert!(results.is_ok());
+        assert_eq!(results.unwrap()[2].stdout, "1 + 2 = 3\n")
+    }
+
+    #[test]
     fn cpp_a_add_b() {
         let commands = vec![
             CMD {
-                command: "sh".to_string(),
+                command: "bash".to_string(),
                 args: vec![
                     "-c".to_string(),
                     r#"echo '#include <iostream>
@@ -230,7 +290,7 @@ int main() {
     fn java_a_add_b() {
         let commands = vec![
             CMD {
-                command: "sh".to_string(),
+                command: "bash".to_string(),
                 args: vec![
                     "-c".to_string(),
                     r#"echo 'import java.util.Scanner;
