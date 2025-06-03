@@ -108,7 +108,7 @@ pub fn sandbox_service(
     command.arg(image).arg("./sandbox");
     let _ = command.output();
     let results = fs::read_to_string(format!("{}/results.yaml", tmp_folder)).unwrap();
-    // let _ = fs::remove_dir_all(tmp_folder);
+    let _ = fs::remove_dir_all(tmp_folder);
     Ok(serde_yaml::from_str(&results).unwrap())
 }
 
